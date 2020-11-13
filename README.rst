@@ -1,5 +1,5 @@
-FIX
-===
+Bazel fix
+=========
 This branch contains a fix for getting the debugger to work with bazel.
 This fix works with the following versions:
 - bazel: 3.7.0
@@ -10,10 +10,12 @@ This fix works with the following versions:
 Tested only on MacOS.
 
 How to apply the fix?
+
 ```
 cd ~/Library/Application\ Support/JetBrains/IntelliJIdea2020.1/plugins/python/helpers/
 mv pydev pydev_save
 git clone git@github.com:PoncinMatthieu/PyDev.Debugger.git pydev
+```
 
 
 PyDev.Debugger
