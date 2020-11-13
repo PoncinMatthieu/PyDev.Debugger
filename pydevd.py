@@ -3,6 +3,55 @@ Entry point module (keep at root):
 
 This module starts the debugger.
 '''
+
+import os, sys
+from stat import S_IWUSR, S_IREAD
+
+# running bazel on an empty env!
+# Make sure to update this variable to your venv
+# Note that bazel should normally be running on an empty virtual env (pip freeze should return nothing) since bazel takes care of intalling requirements on the path!
+# This is why on intellij/pycharm we use 2 venvs, one for running bazel and one for intellij's autocompletion
+VENV_PATH = "/venv/python3.6.5/bazel"
+if not os.path.isfile(f"{VENV_PATH}/bin/python"):
+    VENV_PATH = os.environ['VIRTUAL_ENV']
+    print(f"Couldn't find specified venv, falling back to configured venv: {VENV_PATH}")
+
+
+def patch_bazel_generated_script(file_to_patch, python_path):
+    """
+    The bazel generated script is calling a wrapper called py3wrapper.sh which is in turn calling python.
+    we need to bypass this wrapper, otherwise breakpoints on intellij will not work!
+    In order to do that, we need to patch the bazel generated script.
+    This patch is working with bazel version 3.7.0 (mac)
+    """
+    with open(file_to_patch, "r") as fd:
+        lines_to_patch = fd.readlines()
+
+    # Simply adding the following line to the bazel generated script before execv is called will bypass the wrapper
+    patch = f'        args[0] = "{python_path}/bin/python"\n'
+    for i in range(0, len(lines_to_patch)):
+        if "os.execv(args[0], args)" in lines_to_patch[i]:
+            if patch != lines_to_patch[i-1]:
+                lines_to_patch.insert(i, patch)
+
+    # make the bazel generated script writtable
+    os.chmod(file_to_patch, S_IWUSR|S_IREAD)
+
+    # apply the patch
+    with open(file_to_patch, "w") as fd:
+        fd.write("".join(lines_to_patch))
+
+# patch bazel if we find that the debuger is executed from the bazel plugin
+file_to_patch = None
+for i in range(0, len(sys.argv)):
+    if sys.argv[i] == "--file" and "bazel-out" in sys.argv[i+1]:
+        file_to_patch = sys.argv[i+1]
+print(f"patching: {file_to_patch}")
+
+if file_to_patch:
+    patch_bazel_generated_script(file_to_patch, VENV_PATH)
+
+
 import sys  # @NoMove
 if sys.version_info[:2] < (2, 6):
     raise RuntimeError('The PyDev.Debugger requires Python 2.6 onwards to be run. If you need to use an older Python version, use an older version of the debugger.')

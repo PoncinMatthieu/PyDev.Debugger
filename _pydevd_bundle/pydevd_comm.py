@@ -447,6 +447,10 @@ def start_client(host, port):
 
     s = socket(AF_INET, SOCK_STREAM)
 
+    # FIX: Set to inheritable to handle changes in Python 3.4
+    if hasattr(s, 'set_inheritable'):
+        s.set_inheritable(True)
+
     #  Set TCP keepalive on an open socket.
     #  It activates after 1 second (TCP_KEEPIDLE,) of idleness,
     #  then sends a keepalive ping once every 3 seconds (TCP_KEEPINTVL),

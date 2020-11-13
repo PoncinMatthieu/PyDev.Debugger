@@ -704,7 +704,11 @@ def get_abs_path_real_path_and_base_from_file(f):
 
 def get_abs_path_real_path_and_base_from_frame(frame):
     try:
-        return NORM_PATHS_AND_BASE_CONTAINER[frame.f_code.co_filename]
+        paths = NORM_PATHS_AND_BASE_CONTAINER[frame.f_code.co_filename]
+        # FIX: always use real paths to prevent intellij from opening the wrong files (bazel symlinks are breaking it)
+        paths = list(paths)
+        paths[0] = paths[1]
+        return paths
     except:
         # This one is just internal (so, does not need any kind of client-server translation)
         f = frame.f_code.co_filename
@@ -718,6 +722,9 @@ def get_abs_path_real_path_and_base_from_frame(frame):
         ret = get_abs_path_real_path_and_base_from_file(f)
         # Also cache based on the frame.f_code.co_filename (if we had it inside build/bdist it can make a difference).
         NORM_PATHS_AND_BASE_CONTAINER[frame.f_code.co_filename] = ret
+        # FIX: always use real paths to prevent intellij from opening the wrong files (bazel symlinks are breaking it)
+        ret = list(ret)
+        ret[0] = ret[1]
         return ret
 
 
