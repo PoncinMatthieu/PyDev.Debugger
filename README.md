@@ -17,6 +17,10 @@ mv pydev pydev_save
 git clone git@github.com:PoncinMatthieu/PyDev.Debugger.git pydev
 ```
 
+The fix contains one hard coded variable that you may want to change. Located [here](pydevd.py#L14).
+This variable defines the python path used to execute your code.
+
+See this for a diff of the path: https://github.com/fabioz/PyDev.Debugger/compare/main...PoncinMatthieu:fix/bazel_debugging
 
 PyDev.Debugger
 ==============
